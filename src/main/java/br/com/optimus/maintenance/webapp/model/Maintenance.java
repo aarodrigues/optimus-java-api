@@ -1,7 +1,5 @@
 package br.com.optimus.maintenance.webapp.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.*;
 import java.util.List;
 
@@ -11,7 +9,7 @@ public class Maintenance {
     private Integer id;
     private Mechanical mechanical;
     private Equipment equipment;
-    private int work_hours;
+    private int workHours;
     private List<MechanicalPiece> pieces;
 
     public Maintenance() {
@@ -61,11 +59,11 @@ public class Maintenance {
     }
 
     @Column(name = "qtd_horas_trabalho")
-    public int getWork_hours() {
-        return work_hours;
+    public int getWorkHours() {
+        return workHours;
     }
 
-    public void setWork_hours(int work_hours) {
-        this.work_hours = work_hours;
+    public void setWorkHours(int workHours) {
+        this.workHours = workHours;
     }
 }

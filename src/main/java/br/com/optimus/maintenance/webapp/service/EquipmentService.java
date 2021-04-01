@@ -36,9 +36,8 @@ public class EquipmentService {
 
     public Equipment update(Equipment equipment) {
         if (equipment == null || equipment.getId() == null) {
-            throw new IllegalArgumentException("Book id can't be null");
+            throw new IllegalArgumentException("Equipment id can't be null");
         }
         return repository.save(equipment);
     }
-
 }

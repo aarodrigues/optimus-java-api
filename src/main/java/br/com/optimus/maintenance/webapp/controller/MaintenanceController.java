@@ -1,12 +1,13 @@
 package br.com.optimus.maintenance.webapp.controller;
 
 import br.com.optimus.maintenance.webapp.dto.EquipmentDTO;
+import br.com.optimus.maintenance.webapp.dto.MaintenanceDTO;
 import br.com.optimus.maintenance.webapp.model.Equipment;
-import br.com.optimus.maintenance.webapp.repository.EquipmentRepository;
-import br.com.optimus.maintenance.webapp.repository.MaintenanceRepository;
-import br.com.optimus.maintenance.webapp.repository.MechanicalPieceRepository;
-import br.com.optimus.maintenance.webapp.repository.MechanicalRepository;
+import br.com.optimus.maintenance.webapp.model.Maintenance;
+import br.com.optimus.maintenance.webapp.model.Mechanical;
 import br.com.optimus.maintenance.webapp.service.EquipmentService;
+import br.com.optimus.maintenance.webapp.service.MaintenanceService;
+import br.com.optimus.maintenance.webapp.service.MechanicalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -17,86 +18,78 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/maintenance")
+@RequestMapping("/api/optimus/maintenance")
 public class MaintenanceController {
 
-//    @Autowired
-//    private EquipmentRepository equipamentRepository;
-//
-//    @Autowired
-//    private MechanicalRepository machanicalRepository;
-//
-//    @Autowired
-//    private MaintenanceRepository maintenanceRepository;
-//
-//    @Autowired
-//    private MechanicalPieceRepository mechanicalPieceRepository;
+    @Autowired
+    private MaintenanceService maintenanceService;
 
     @Autowired
     private EquipmentService equipmentService;
 
-//    public MaintenanceController() {
-//        equipmentService = new EquipmentService();
-//    }
-
-//    @GetMapping
-//    public String haha() {
-//        return "Hello World";
-//    }
-
-//    @PostMapping
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public void create(@RequestBody EquipmentDTO equipmentDTO) {
-//        Equipment equipment = new Equipment();
-//        equipment.setDescription(equipmentDTO.getDescription());
-//        equipamentRepository.save(equipment);
-//    }
+    @Autowired
+    private MechanicalService mechanicalService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void create(@RequestBody EquipmentDTO equipmentDTO) {
-        Equipment equipment = new Equipment();
-        equipment.setDescription(equipmentDTO.getDescription());
-        equipmentService.save(equipment);
+    public void create(@RequestBody MaintenanceDTO maintenanceDTO) {
+        Maintenance maintenance = new Maintenance();
+        Equipment equipment = equipmentService.getById(maintenanceDTO.getEquipmentId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Mechanical mechanical = mechanicalService.getById(maintenanceDTO.getMechanicalId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        maintenance.setEquipment(equipment);
+        maintenance.setMechanical(mechanical);
+        maintenance.setWorkHours(maintenanceDTO.getWorkHours());
+
+        maintenanceService.save(maintenance);
     }
 
-//    @GetMapping("{id}")
-//    public EquipmentDTO get(@PathVariable Integer id) {
-//        Optional<Equipment> equipments = equipmentService.getById(id);
-//        EquipmentDTO equipmentDTO = new EquipmentDTO();
-//        equipmentDTO.setDescription(equipments.get().getDescription());
-//        return equipmentDTO;
-//    }
+    @GetMapping("{id}")
+    public MaintenanceDTO get(@PathVariable Integer id) {
+        Optional<Maintenance> maintenance = maintenanceService.getById(id);
+        MaintenanceDTO maintenanceDTO = new MaintenanceDTO();
+        maintenanceDTO.setEquipmentId(maintenance.get().getEquipment().getId());
+        maintenanceDTO.setMechanicalId(maintenance.get().getMechanical().getId());
+        maintenanceDTO.setWorkHours(maintenance.get().getWorkHours());
+        return maintenanceDTO;
+    }
 
     @GetMapping
-    public List<EquipmentDTO> getAll() {
-        List<Equipment> equipments = equipmentService.getAll();
-        List<EquipmentDTO> equipmentDTOList = new ArrayList<EquipmentDTO>();
-        for (Equipment eq : equipments) {
-            EquipmentDTO dto = new EquipmentDTO();
-            dto.setDescription(eq.getDescription());
-            equipmentDTOList.add(dto);
+    public List<MaintenanceDTO> getAll() {
+        List<Maintenance> maintenances = maintenanceService.getAll();
+        List<MaintenanceDTO> maintenanceDTOList = new ArrayList<MaintenanceDTO>();
+        for (Maintenance mt : maintenances) {
+            MaintenanceDTO dto = new MaintenanceDTO();
+            dto.setEquipmentId(mt.getEquipment().getId());
+            dto.setMechanicalId(mt.getMechanical().getId());
+            dto.setWorkHours(mt.getWorkHours());
+            maintenanceDTOList.add(dto);
         }
-        return equipmentDTOList;
+        return maintenanceDTOList;
     }
 
     @PutMapping("{id}")
-    public EquipmentDTO update(@PathVariable Integer id, @RequestBody EquipmentDTO dto) {
-        Equipment equipment = equipmentService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        equipment.setDescription(dto.getDescription());
+    public MaintenanceDTO update(@PathVariable Integer id, @RequestBody MaintenanceDTO dto) {
+        Maintenance maintenance = maintenanceService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Equipment equipment = equipmentService.getById(dto.getEquipmentId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Mechanical mechanical = mechanicalService.getById(dto.getMechanicalId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        maintenance.setEquipment(equipment);
+        maintenance.setMechanical(mechanical);
+        maintenance.setWorkHours(dto.getWorkHours());
 
-        equipment = equipmentService.update(equipment);
-        EquipmentDTO equipmentDTO = new EquipmentDTO();
-        equipmentDTO.setDescription(equipment.getDescription());
+        maintenance = maintenanceService.update(maintenance);
+        MaintenanceDTO maintenanceDTO = new MaintenanceDTO();
 
-        return equipmentDTO;
+        maintenanceDTO.setEquipmentId(maintenance.getEquipment().getId());
+        maintenanceDTO.setMechanicalId(maintenance.getMechanical().getId());
+        maintenanceDTO.setWorkHours(maintenance.getWorkHours());
+
+        return maintenanceDTO;
     }
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Integer id) {
-        Equipment equipment = equipmentService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        equipmentService.delete(equipment);
+        Maintenance maintenance = maintenanceService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        maintenanceService.delete(maintenance);
     }
-
 }
